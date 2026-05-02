@@ -243,6 +243,10 @@ document.addEventListener('click', e => {
 document.addEventListener('keydown', e => { if (e.key==='Escape') ['checkout-modal','success-modal','login-guard'].forEach(closeModal); });
 
 document.addEventListener('DOMContentLoaded', init);
+
+function scrollToProducts() {
+  document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+}
 </script>
 </body>
 </html>
