@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Access – PulseGear</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="bg-grid"></div><div class="scanline"></div>
+<div class="auth-page">
+  <div class="auth-box">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-family:var(--F1);font-size:2rem;color:var(--p)">⚙</div>
+      <h1 class="auth-title" style="margin-bottom:0">// ADMIN ACCESS</h1>
+      <p style="font-family:var(--F2);font-size:.68rem;color:var(--mute);margin-top:6px;letter-spacing:.1em">RESTRICTED — AUTHORISED PERSONNEL ONLY</p>
+    </div>
+    <div class="err-msg" id="err"></div>
+    <form onsubmit="doAdminLogin(event)">
+      <div class="fg"><label>ADMIN EMAIL</label><input type="email" id="email" required placeholder="admin@pulsegear.com"/></div>
+      <div class="fg"><label>PASSWORD</label><input type="password" id="pass" required placeholder="••••••••"/></div>
+      <button type="submit" class="btn btn-p btn-full" id="btn">⚡ ACCESS PANEL</button>
+    </form>
+    <p style="font-family:var(--F2);font-size:.65rem;color:#222;text-align:center;margin-top:20px">This page is not linked from the public site.</p>
+  </div>
+</div>
+<script src="../js/config.js"></script>
+<script>
+async function doAdminLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn');
+  const err = document.getElementById('err');
+  err.style.display='none';
+  btn.textContent='VERIFYING...'; btn.disabled=true;
+
+  const { data, error } = await sb().auth.signInWithPassword({
+    email: document.getElementById('email').value,
+    password: document.getElementById('pass').value
+  });
+
+  if (error) { err.textContent=error.message; err.style.display='block'; btn.textContent='⚡ ACCESS PANEL'; btn.disabled=false; return; }
+
+  // Check if admin via DB role
+  const { data: role } = await sb().from('admin_users').select('email').eq('email', data.user.email).single();
+  if (!role) {
+    await sb().auth.signOut();
+    err.textContent='Access denied. This account is not an admin.';
+    err.style.display='block';
+    btn.textContent='⚡ ACCESS PANEL'; btn.disabled=false;
+    return;
+  }
+
+  window.location.href = 'dashboard.html';
+}
+</script>
+</body>
+</html>

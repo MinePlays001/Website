@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>My Orders – PulseGear</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="bg-grid"></div><div class="scanline"></div>
+<nav id="navbar">
+  <a class="nav-logo" href="../index.html"><span class="logo-p">PULSE</span><span class="logo-g">GEAR</span></a>
+  <div class="nav-links">
+    <a href="../index.html">STORE</a>
+    <a href="orders.html" class="active" id="nav-orders">MY ORDERS</a>
+  </div>
+  <div class="nav-auth">
+    <span id="nav-username" class="nav-user"></span>
+    <a href="login.html" id="nav-login" class="btn">LOGIN</a>
+    <button id="nav-logout" class="btn btn-p" style="display:none" onclick="logout()">LOGOUT</button>
+  </div>
+</nav>
+<div class="page-wrap">
+  <h1 class="page-title">// MY ORDERS</h1>
+  <div id="orders-wrap"><div style="font-family:var(--F2);color:var(--mute);text-align:center;padding:60px">LOADING...</div></div>
+</div>
+<script src="../js/config.js"></script>
+<script src="../js/auth.js"></script>
+<script>
+async function load() {
+  await new Promise(r=>setTimeout(r,700));
+  if (!currentUser) { window.location.href='login.html'; return; }
+  const { data } = await sb().from('orders').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const wrap = document.getElementById('orders-wrap');
+  if (!data?.length) {
+    wrap.innerHTML=`<div style="text-align:center;padding:80px;font-family:var(--F2)">
+      <div style="font-size:3rem;margin-bottom:14px">📦</div>
+      <div style="color:var(--mute)">// NO ORDERS YET</div>
+      <a href="../index.html" class="btn" style="display:inline-block;margin-top:20px">SHOP NOW</a>
+    </div>`; return;
+  }
+  wrap.innerHTML=`<div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>ORDER ID</th><th>PRODUCT</th><th>PRICE</th><th>PAYMENT</th><th>DATE</th><th>STATUS</th></tr></thead>
+    <tbody>${data.map(o=>`<tr>
+      <td style="color:var(--c);font-size:.7rem">${o.order_id}</td>
+      <td>${o.product_name}</td>
+      <td style="color:var(--y)">Rs. ${o.product_price?.toLocaleString()}</td>
+      <td>${o.payment_method}</td>
+      <td style="color:var(--mute);font-size:.72rem">${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
+      <td><span class="badge-status s-${o.status}">${o.status.toUpperCase()}</span></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+document.addEventListener('DOMContentLoaded',()=>setTimeout(load,600));
+</script>
+</body>
+</html>

@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Admin Panel – PulseGear</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="bg-grid"></div><div class="scanline"></div>
+
+<nav id="navbar">
+  <a class="nav-logo" href="../index.html" target="_blank"><span class="logo-p">PULSE</span><span class="logo-g">GEAR</span></a>
+  <div class="nav-links">
+    <span style="font-family:var(--F2);font-size:.7rem;color:var(--p);letter-spacing:.1em">⚙ ADMIN PANEL</span>
+  </div>
+  <div class="nav-auth">
+    <span id="admin-email" style="font-family:var(--F2);font-size:.72rem;color:var(--c)"></span>
+    <button class="btn btn-p btn-sm" onclick="adminLogout()">LOGOUT</button>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-section">MAIN</div>
+    <a class="sidebar-link active" onclick="show('overview')">📊 Overview</a>
+    <div class="sidebar-section">STORE</div>
+    <a class="sidebar-link" onclick="show('orders')">📦 Orders</a>
+    <a class="sidebar-link" onclick="show('products')">🛍 Products</a>
+    <a class="sidebar-link" onclick="show('sales')">💰 Sales</a>
+    <div class="sidebar-section">ADMIN</div>
+    <a class="sidebar-link" onclick="show('settings')">⚙ Store Settings</a>
+    <a class="sidebar-link" onclick="show('payments')">💳 Payment Info</a>
+    <a class="sidebar-link" onclick="show('admins')">👤 Admin Users</a>
+    <a class="sidebar-link" onclick="show('banner')">🎨 Hero Banner</a>
+  </aside>
+
+  <main class="admin-main">
+
+    <!-- ===== OVERVIEW ===== -->
+    <div id="tab-overview">
+      <h1 class="admin-title">// OVERVIEW</h1>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">TOTAL ORDERS</div><div class="stat-val" id="s-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">PENDING</div><div class="stat-val" id="s-pending" style="color:var(--y)">—</div></div>
+        <div class="stat-card"><div class="stat-label">DELIVERED</div><div class="stat-val" id="s-delivered" style="color:var(--g)">—</div></div>
+        <div class="stat-card"><div class="stat-label">TOTAL REVENUE</div><div class="stat-val" id="s-revenue">—</div></div>
+        <div class="stat-card"><div class="stat-label">PRODUCTS</div><div class="stat-val" id="s-prods" style="color:var(--c)">—</div></div>
+        <div class="stat-card"><div class="stat-label">TODAY ORDERS</div><div class="stat-val" id="s-today" style="color:var(--p)">—</div></div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card-title">// RECENT ORDERS</div>
+        <div style="overflow-x:auto"><table class="tbl" id="recent-tbl">
+          <thead><tr><th>ORDER ID</th><th>CUSTOMER</th><th>PRODUCT</th><th>PRICE</th><th>STATUS</th><th>DATE</th></tr></thead>
+          <tbody id="recent-body"><tr><td colspan="6" style="text-align:center;color:var(--mute)">LOADING...</td></tr></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ===== ORDERS ===== -->
+    <div id="tab-orders" style="display:none">
+      <h1 class="admin-title">// ALL ORDERS</h1>
+      <div class="search-bar">
+        <input id="order-search" placeholder="Search by name, phone, order ID..." oninput="searchOrders()"/>
+        <select id="order-filter" onchange="loadOrders()" style="background:rgba(0,0,0,.5);border:1px solid #1e1e2e;color:var(--text);font-family:var(--F2);font-size:.8rem;padding:8px 12px;outline:none">
+          <option value="all">ALL STATUS</option>
+          <option value="pending">PENDING</option>
+          <option value="shipped">SHIPPED</option>
+          <option value="delivered">DELIVERED</option>
+          <option value="cancelled">CANCELLED</option>
+        </select>
+        <button class="btn btn-sm" onclick="exportOrdersCSV()">⬇ EXPORT CSV</button>
+      </div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>ORDER ID</th><th>CUSTOMER</th><th>PHONE</th><th>ADDRESS</th><th>PRODUCT</th><th>PRICE</th><th>PAYMENT</th><th>DATE</th><th>STATUS</th><th>ACTION</th></tr></thead>
+        <tbody id="orders-body"><tr><td colspan="10" style="text-align:center;color:var(--mute)">LOADING...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- ===== PRODUCTS ===== -->
+    <div id="tab-products" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h1 class="admin-title" style="margin:0">// PRODUCTS</h1>
+        <button class="btn" onclick="openProductModal()">+ ADD PRODUCT</button>
+      </div>
+      <div class="prod-admin-grid" id="prod-admin-grid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">LOADING...</div>
+      </div>
+    </div>
+
+    <!-- ===== SALES ===== -->
+    <div id="tab-sales" style="display:none">
+      <h1 class="admin-title">// SALES REPORT</h1>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="loadSales('weekly',this)">THIS WEEK</button>
+        <button class="tab-btn" onclick="loadSales('monthly',this)">THIS MONTH</button>
+        <button class="tab-btn" onclick="loadSales('yearly',this)">THIS YEAR</button>
+        <button class="tab-btn" onclick="loadSales('all',this)">ALL TIME</button>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label">REVENUE</div><div class="stat-val" id="sl-rev">—</div></div>
+        <div class="stat-card"><div class="stat-label">DELIVERED ORDERS</div><div class="stat-val" id="sl-cnt" style="color:var(--g)">—</div></div>
+        <div class="stat-card"><div class="stat-label">AVG ORDER</div><div class="stat-val" id="sl-avg" style="color:var(--c)">—</div></div>
+      </div>
+      <div style="overflow-x:auto"><table class="tbl">
+        <thead><tr><th>ORDER ID</th><th>CUSTOMER</th><th>PRODUCT</th><th>PRICE</th><th>PAYMENT</th><th>DELIVERED</th></tr></thead>
+        <tbody id="sales-body"><tr><td colspan="6" style="text-align:center;color:var(--mute)">SELECT A PERIOD</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div id="tab-settings" style="display:none">
+      <h1 class="admin-title">// STORE SETTINGS</h1>
+      <div class="settings-grid">
+        <div class="admin-card">
+          <div class="admin-card-title">// STORE INFO</div>
+          <div class="fg"><label>STORE NAME</label><input id="cfg-name" placeholder="PulseGear"/></div>
+          <div class="fg"><label>HERO TAGLINE</label><input id="cfg-tagline" placeholder="Next-gen tech..."/></div>
+          <div class="fg"><label>WHATSAPP NUMBER (for notifications)</label><input id="cfg-wa" placeholder="03001234567"/></div>
+          <button class="btn" onclick="saveStoreInfo()">SAVE STORE INFO</button>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">// CATEGORIES</div>
+          <p style="font-family:var(--F2);font-size:.72rem;color:var(--mute);margin-bottom:12px">Categories are auto-generated from products. Add a product with a new category to create it.</p>
+          <div id="cats-list" style="font-family:var(--F2);font-size:.78rem;color:var(--c)">Loading...</div>
+        </div>
+      </div>
+      <div class="suc-msg" id="settings-suc" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ===== PAYMENTS ===== -->
+    <div id="tab-payments" style="display:none">
+      <h1 class="admin-title">// PAYMENT SETTINGS</h1>
+      <div class="settings-grid">
+        <div class="admin-card">
+          <div class="admin-card-title">// JAZZCASH</div>
+          <div class="fg"><label>JAZZCASH NUMBER</label><input id="cfg-jc" placeholder="03001234567"/></div>
+          <div class="fg"><label>ACCOUNT NAME</label><input id="cfg-jcname" placeholder="Your Name"/></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">// EASYPAISA</div>
+          <div class="fg"><label>EASYPAISA NUMBER</label><input id="cfg-ep" placeholder="03001234567"/></div>
+          <div class="fg"><label>ACCOUNT NAME</label><input id="cfg-epname" placeholder="Your Name"/></div>
+        </div>
+        <div class="admin-card">
+          <div class="admin-card-title">// CASH ON DELIVERY</div>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-family:var(--F2);font-size:.8rem">
+            <input type="checkbox" id="cfg-cod" style="accent-color:var(--c);width:16px;height:16px"/>
+            <span>Enable Cash on Delivery</span>
+          </label>
+        </div>
+      </div>
+      <br>
+      <button class="btn" onclick="savePayments()">SAVE PAYMENT SETTINGS</button>
+      <div class="suc-msg" id="pay-suc" style="margin-top:16px"></div>
+    </div>
+
+    <!-- ===== ADMIN USERS ===== -->
+    <div id="tab-admins" style="display:none">
+      <h1 class="admin-title">// ADMIN USERS</h1>
+      <div class="admin-card" style="max-width:500px">
+        <div class="admin-card-title">// ADD ADMIN EMAIL</div>
+        <div class="fg"><label>EMAIL</label><input id="new-admin-email" type="email" placeholder="newadmin@email.com"/></div>
+        <button class="btn" onclick="addAdmin()">+ ADD ADMIN</button>
+        <div class="suc-msg" id="admin-suc" style="margin-top:12px"></div>
+        <div class="err-msg" id="admin-err" style="margin-top:12px"></div>
+      </div>
+      <br>
+      <div class="admin-card">
+        <div class="admin-card-title">// CURRENT ADMINS</div>
+        <div id="admins-list" style="font-family:var(--F2);font-size:.8rem;color:var(--mute)">Loading...</div>
+      </div>
+    </div>
+
+    <!-- ===== BANNER ===== -->
+    <div id="tab-banner" style="display:none">
+      <h1 class="admin-title">// HERO BANNER</h1>
+      <div class="admin-card" style="max-width:600px">
+        <div class="admin-card-title">// CUSTOMIZE HERO SECTION</div>
+        <div class="fg"><label>MAIN HEADING (Store Name)</label><input id="b-name" placeholder="PULSEGEAR"/></div>
+        <div class="fg"><label>TAGLINE / SUBTITLE</label><input id="b-tagline" placeholder="Next-gen tech..."/></div>
+        <div class="fg"><label>BADGE 1</label><input id="b-b1" placeholder="⚡ Fast Delivery"/></div>
+        <div class="fg"><label>BADGE 2</label><input id="b-b2" placeholder="🔒 Secure Checkout"/></div>
+        <div class="fg"><label>BADGE 3</label><input id="b-b3" placeholder="📦 COD Available"/></div>
+        <button class="btn" onclick="saveBanner()">SAVE BANNER</button>
+        <div class="suc-msg" id="banner-suc" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ORDER ACTION MODAL -->
+<div id="order-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('order-modal')">✕</button>
+    <h2 class="modal-title">// ORDER DETAILS</h2>
+    <div id="order-modal-body"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:18px" id="order-modal-actions"></div>
+  </div>
+</div>
+
+<!-- PRODUCT MODAL -->
+<div id="product-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('product-modal')">✕</button>
+    <h2 class="modal-title" id="prod-modal-title">// ADD PRODUCT</h2>
+    <input type="hidden" id="prod-id"/>
+    <div class="fg"><label>PRODUCT NAME</label><input id="prod-name" required placeholder="HyperX Headset"/></div>
+    <div class="fg"><label>CATEGORY</label><input id="prod-cat" required placeholder="gaming / audio / mobile / accessories"/></div>
+    <div class="fg"><label>PRICE (PKR)</label><input id="prod-price" type="number" required placeholder="8500"/></div>
+    <div class="fg"><label>STOCK</label><input id="prod-stock" type="number" required placeholder="10"/></div>
+    <div class="fg"><label>EMOJI (shown if no image)</label><input id="prod-emoji" placeholder="🎧"/></div>
+    <div class="fg"><label>IMAGE URL (optional)</label><input id="prod-img" placeholder="https://..."/></div>
+    <div class="fg"><label>DESCRIPTION</label><textarea id="prod-desc" placeholder="Short product description"></textarea></div>
+    <div class="fg">
+      <label>STATUS</label>
+      <select id="prod-active"><option value="true">Active (visible)</option><option value="false">Hidden</option></select>
+    </div>
+    <div class="err-msg" id="prod-err"></div>
+    <button class="btn btn-full" onclick="saveProduct()">SAVE PRODUCT</button>
+  </div>
+</div>
+
+<script src="../js/config.js"></script>
+<script>
+let allOrders = [], currentTab = 'overview';
+
+// ---- GUARD ----
+async function adminGuard() {
+  const { data: { session } } = await sb().auth.getSession();
+  if (!session) { window.location.href = 'login.html'; return false; }
+  const { data: role } = await sb().from('admin_users').select('email').eq('email', session.user.email).single();
+  if (!role) { await sb().auth.signOut(); window.location.href = 'login.html'; return false; }
+  document.getElementById('admin-email').textContent = session.user.email;
+  return true;
+}
+
+async function adminLogout() { await sb().auth.signOut(); window.location.href = 'login.html'; }
+
+// ---- TAB SWITCHER ----
+function show(tab) {
+  document.querySelectorAll('.admin-main > div').forEach(d => d.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+  document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
+  event.target.classList.add('active');
+  currentTab = tab;
+  if (tab === 'overview')  loadOverview();
+  if (tab === 'orders')    loadOrders();
+  if (tab === 'products')  loadAdminProducts();
+  if (tab === 'sales')     loadSales('weekly', document.querySelector('#tab-sales .tab-btn'));
+  if (tab === 'settings')  loadSettingsForm();
+  if (tab === 'payments')  loadPaymentsForm();
+  if (tab === 'admins')    loadAdmins();
+  if (tab === 'banner')    loadBannerForm();
+}
+
+// ---- OVERVIEW ----
+async function loadOverview() {
+  const { data: orders } = await sb().from('orders').select('*');
+  const { data: prods }  = await sb().from('products').select('id');
+  if (!orders) return;
+  const today = new Date().toDateString();
+  const delivered = orders.filter(o=>o.status==='delivered');
+  document.getElementById('s-total').textContent     = orders.length;
+  document.getElementById('s-pending').textContent   = orders.filter(o=>o.status==='pending').length;
+  document.getElementById('s-delivered').textContent = delivered.length;
+  document.getElementById('s-revenue').textContent   = 'Rs.'+delivered.reduce((s,o)=>s+(o.product_price||0),0).toLocaleString();
+  document.getElementById('s-prods').textContent     = prods?.length || 0;
+  document.getElementById('s-today').textContent     = orders.filter(o=>new Date(o.created_at).toDateString()===today).length;
+  const recent = orders.slice(0,8);
+  document.getElementById('recent-body').innerHTML = recent.map(o=>`<tr>
+    <td style="color:var(--c);font-size:.7rem">${o.order_id}</td>
+    <td>${o.customer_name}</td><td>${o.product_name}</td>
+    <td style="color:var(--y)">Rs.${(o.product_price||0).toLocaleString()}</td>
+    <td><span class="badge-status s-${o.status}">${o.status.toUpperCase()}</span></td>
+    <td style="color:var(--mute);font-size:.7rem">${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
+  </tr>`).join('');
+}
+
+// ---- ORDERS ----
+async function loadOrders() {
+  const filter = document.getElementById('order-filter')?.value || 'all';
+  let query = sb().from('orders').select('*').order('created_at',{ascending:false});
+  if (filter !== 'all') query = query.eq('status', filter);
+  const { data } = await query;
+  allOrders = data || [];
+  renderOrders(allOrders);
+}
+
+function searchOrders() {
+  const q = document.getElementById('order-search').value.toLowerCase();
+  renderOrders(allOrders.filter(o =>
+    o.order_id?.toLowerCase().includes(q) ||
+    o.customer_name?.toLowerCase().includes(q) ||
+    o.phone?.includes(q)
+  ));
+}
+
+function renderOrders(orders) {
+  document.getElementById('orders-body').innerHTML = !orders.length
+    ? `<tr><td colspan="10" style="text-align:center;color:var(--mute);padding:30px">// NO ORDERS</td></tr>`
+    : orders.map(o=>`<tr id="row-${o.id}">
+        <td style="color:var(--c);font-size:.68rem">${o.order_id}</td>
+        <td>${o.customer_name}</td>
+        <td style="font-family:var(--F2)">${o.phone}</td>
+        <td style="max-width:130px;font-size:.72rem;color:var(--mute)">${o.address}</td>
+        <td>${o.product_name}</td>
+        <td style="color:var(--y)">Rs.${(o.product_price||0).toLocaleString()}</td>
+        <td>${o.payment_method}</td>
+        <td style="font-size:.7rem;color:var(--mute)">${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
+        <td><span class="badge-status s-${o.status}" id="badge-${o.id}">${o.status.toUpperCase()}</span></td>
+        <td><button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button></td>
+      </tr>`).join('');
+}
+
+function openOrderModal(id) {
+  const o = allOrders.find(x=>x.id===id);
+  if (!o) return;
+  document.getElementById('order-modal-body').innerHTML = `
+    <div style="font-family:var(--F2);font-size:.8rem;line-height:2.1;background:rgba(0,245,255,.04);border:1px solid rgba(0,245,255,.1);padding:14px">
+      <div><span style="color:var(--mute)">ORDER ID:</span> <span style="color:var(--c)">${o.order_id}</span></div>
+      <div><span style="color:var(--mute)">NAME:</span> ${o.customer_name}</div>
+      <div><span style="color:var(--mute)">PHONE:</span> ${o.phone}</div>
+      <div><span style="color:var(--mute)">ADDRESS:</span> ${o.address}</div>
+      <div><span style="color:var(--mute)">PRODUCT:</span> ${o.product_name}</div>
+      <div><span style="color:var(--mute)">PRICE:</span> <span style="color:var(--y)">Rs. ${(o.product_price||0).toLocaleString()}</span></div>
+      <div><span style="color:var(--mute)">PAYMENT:</span> ${o.payment_method}</div>
+      <div><span style="color:var(--mute)">DATE:</span> ${new Date(o.created_at).toLocaleString('en-PK')}</div>
+      <div><span style="color:var(--mute)">STATUS:</span> <span class="badge-status s-${o.status}">${o.status.toUpperCase()}</span></div>
+    </div>`;
+  document.getElementById('order-modal-actions').innerHTML = `
+    <button class="btn btn-sm" onclick="updateStatus('${o.id}','pending')">PENDING</button>
+    <button class="btn btn-sm" onclick="updateStatus('${o.id}','shipped')">MARK SHIPPED</button>
+    <button class="btn btn-g btn-sm" onclick="updateStatus('${o.id}','delivered')">✓ DELIVERED</button>
+    <button class="btn btn-p btn-sm" onclick="updateStatus('${o.id}','cancelled')">CANCEL</button>`;
+  document.getElementById('order-modal').style.display = 'flex';
+}
+
+async function updateStatus(id, status) {
+  const update = { status };
+  if (status === 'delivered') update.delivered_at = new Date().toISOString();
+  const { error } = await sb().from('orders').update(update).eq('id', id);
+  if (error) { alert(error.message); return; }
+  const idx = allOrders.findIndex(o=>o.id===id);
+  if (idx !== -1) { allOrders[idx].status = status; if (update.delivered_at) allOrders[idx].delivered_at = update.delivered_at; }
+  const badge = document.getElementById('badge-'+id);
+  if (badge) { badge.className=`badge-status s-${status}`; badge.textContent=status.toUpperCase(); }
+  const row = document.getElementById('row-'+id);
+  if (row) { row.classList.add('status-updated'); setTimeout(()=>row.classList.remove('status-updated'),700); }
+  closeModal('order-modal');
+  if (status === 'delivered') {
+    const o = allOrders[idx];
+    await loadSettings();
+    const msg = encodeURIComponent(`Hi ${o.customer_name}! Your PulseGear order "${o.product_name}" (${o.order_id}) has been delivered! Thank you 🎉`);
+    const num = o.phone.replace(/^0/,'').replace(/-/g,'');
+    window.open(`https://wa.me/92${num}?text=${msg}`, '_blank');
+  }
+}
+
+function exportOrdersCSV() {
+  const h = ['Order ID','Customer','Phone','Address','Product','Price','Payment','Status','Date'];
+  const rows = allOrders.map(o => [o.order_id,o.customer_name,o.phone,`"${o.address}"`,o.product_name,o.product_price,o.payment_method,o.status,new Date(o.created_at).toLocaleDateString()]);
+  const csv = [h, ...rows].map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'pulsegear-orders-'+Date.now()+'.csv'; a.click();
+}
+
+// ---- PRODUCTS ----
+async function loadAdminProducts() {
+  const { data } = await sb().from('products').select('*').order('created_at',{ascending:false});
+  const grid = document.getElementById('prod-admin-grid');
+  if (!data?.length) { grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">// NO PRODUCTS. ADD ONE ↗</div>`; return; }
+  grid.innerHTML = data.map(p=>`
+    <div class="prod-admin-card">
+      ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px"/>`
+        : `<div class="prod-emoji">${p.emoji||'📦'}</div>`}
+      <div class="prod-admin-name">${p.name}</div>
+      <div style="font-family:var(--F2);font-size:.65rem;color:var(--mute);margin-bottom:4px">${p.category} · Stock: ${p.stock}</div>
+      <div class="prod-admin-price">Rs. ${p.price?.toLocaleString()}</div>
+      <div style="font-family:var(--F2);font-size:.62rem;margin-bottom:10px;color:${p.active?'var(--g)':'var(--p)'}">${p.active?'● ACTIVE':'○ HIDDEN'}</div>
+      <div class="prod-admin-actions">
+        <button class="btn btn-sm" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,"'")})">EDIT</button>
+        <button class="btn btn-p btn-sm" onclick="deleteProduct('${p.id}','${p.name}')">DELETE</button>
+      </div>
+    </div>`).join('');
+}
+
+function openProductModal(p) {
+  document.getElementById('prod-modal-title').textContent = p ? '// EDIT PRODUCT' : '// ADD PRODUCT';
+  document.getElementById('prod-id').value    = p?.id || '';
+  document.getElementById('prod-name').value  = p?.name || '';
+  document.getElementById('prod-cat').value   = p?.category || '';
+  document.getElementById('prod-price').value = p?.price || '';
+  document.getElementById('prod-stock').value = p?.stock || '';
+  document.getElementById('prod-emoji').value = p?.emoji || '';
+  document.getElementById('prod-img').value   = p?.image_url || '';
+  document.getElementById('prod-desc').value  = p?.description || '';
+  document.getElementById('prod-active').value = String(p?.active ?? true);
+  document.getElementById('prod-err').style.display = 'none';
+  document.getElementById('product-modal').style.display = 'flex';
+}
+
+async function saveProduct() {
+  const id = document.getElementById('prod-id').value;
+  const data = {
+    name: document.getElementById('prod-name').value.trim(),
+    category: document.getElementById('prod-cat').value.trim().toLowerCase(),
+    price: parseInt(document.getElementById('prod-price').value),
+    stock: parseInt(document.getElementById('prod-stock').value),
+    emoji: document.getElementById('prod-emoji').value.trim(),
+    image_url: document.getElementById('prod-img').value.trim() || null,
+    description: document.getElementById('prod-desc').value.trim(),
+    active: document.getElementById('prod-active').value === 'true'
+  };
+  const err = document.getElementById('prod-err');
+  let error;
+  if (id) { ({ error } = await sb().from('products').update(data).eq('id', id)); }
+  else    { ({ error } = await sb().from('products').insert([data])); }
+  if (error) { err.textContent=error.message; err.style.display='block'; return; }
+  closeModal('product-modal'); loadAdminProducts();
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  await sb().from('products').delete().eq('id', id);
+  loadAdminProducts();
+}
+
+// ---- SALES ----
+async function loadSales(period, btn) {
+  document.querySelectorAll('#tab-sales .tab-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  const now = new Date(); let from;
+  if (period==='weekly')  { from = new Date(now); from.setDate(now.getDate()-7); }
+  if (period==='monthly') { from = new Date(now.getFullYear(),now.getMonth(),1); }
+  if (period==='yearly')  { from = new Date(now.getFullYear(),0,1); }
+  let q = sb().from('orders').select('*').eq('status','delivered').order('delivered_at',{ascending:false});
+  if (from) q = q.gte('delivered_at', from.toISOString());
+  const { data: sales } = await q;
+  const rev = (sales||[]).reduce((s,o)=>s+(o.product_price||0),0);
+  const cnt = sales?.length||0;
+  document.getElementById('sl-rev').textContent = 'Rs.'+rev.toLocaleString();
+  document.getElementById('sl-cnt').textContent = cnt;
+  document.getElementById('sl-avg').textContent = cnt ? 'Rs.'+(Math.round(rev/cnt)).toLocaleString() : '—';
+  document.getElementById('sales-body').innerHTML = !cnt
+    ? `<tr><td colspan="6" style="text-align:center;color:var(--mute);padding:30px">// NO SALES IN THIS PERIOD</td></tr>`
+    : sales.map(o=>`<tr>
+        <td style="color:var(--c);font-size:.7rem">${o.order_id}</td>
+        <td>${o.customer_name}</td><td>${o.product_name}</td>
+        <td style="color:var(--y)">Rs.${(o.product_price||0).toLocaleString()}</td>
+        <td>${o.payment_method}</td>
+        <td style="color:var(--mute);font-size:.7rem">${o.delivered_at?new Date(o.delivered_at).toLocaleDateString('en-PK'):'—'}</td>
+      </tr>`).join('');
+}
+
+// ---- SETTINGS ----
+async function loadSettingsForm() {
+  await loadSettings();
+  document.getElementById('cfg-name').value    = SETTINGS.store_name || '';
+  document.getElementById('cfg-tagline').value = SETTINGS.hero_tagline || '';
+  document.getElementById('cfg-wa').value      = SETTINGS.whatsapp || '';
+  // categories
+  const { data } = await sb().from('products').select('category');
+  const cats = [...new Set((data||[]).map(p=>p.category))];
+  document.getElementById('cats-list').textContent = cats.length ? cats.join(', ') : 'No products yet';
+}
+
+async function saveStoreInfo() {
+  await saveSetting('store_name', document.getElementById('cfg-name').value);
+  await saveSetting('hero_tagline', document.getElementById('cfg-tagline').value);
+  await saveSetting('whatsapp', document.getElementById('cfg-wa').value);
+  showSuc('settings-suc', '✓ Store info saved!');
+}
+
+async function loadPaymentsForm() {
+  await loadSettings();
+  document.getElementById('cfg-jc').value     = SETTINGS.jazzcash || '';
+  document.getElementById('cfg-jcname').value = SETTINGS.jazzcash_name || '';
+  document.getElementById('cfg-ep').value     = SETTINGS.easypaisa || '';
+  document.getElementById('cfg-epname').value = SETTINGS.easypaisa_name || '';
+  document.getElementById('cfg-cod').checked  = SETTINGS.cod_enabled !== false;
+}
+
+async function savePayments() {
+  await saveSetting('jazzcash',       document.getElementById('cfg-jc').value);
+  await saveSetting('jazzcash_name',  document.getElementById('cfg-jcname').value);
+  await saveSetting('easypaisa',      document.getElementById('cfg-ep').value);
+  await saveSetting('easypaisa_name', document.getElementById('cfg-epname').value);
+  await saveSetting('cod_enabled',    document.getElementById('cfg-cod').checked);
+  showSuc('pay-suc', '✓ Payment settings saved!');
+}
+
+// ---- ADMINS ----
+async function loadAdmins() {
+  const { data } = await sb().from('admin_users').select('*');
+  document.getElementById('admins-list').innerHTML = (data||[]).map(a=>
+    `<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1a1a2e">
+      <span>${a.email}</span>
+      <button class="btn btn-p btn-sm" onclick="removeAdmin('${a.id}','${a.email}')">REMOVE</button>
+    </div>`).join('') || '<div style="color:var(--mute)">No admins found.</div>';
+}
+
+async function addAdmin() {
+  const email = document.getElementById('new-admin-email').value.trim();
+  if (!email) return;
+  const { error } = await sb().from('admin_users').insert([{ email }]);
+  if (error) { showErr2('admin-err', error.message); return; }
+  showSuc('admin-suc', '✓ Admin added!');
+  document.getElementById('new-admin-email').value = '';
+  loadAdmins();
+}
+
+async function removeAdmin(id, email) {
+  if (!confirm(`Remove admin access for ${email}?`)) return;
+  await sb().from('admin_users').delete().eq('id', id);
+  loadAdmins();
+}
+
+// ---- BANNER ----
+async function loadBannerForm() {
+  await loadSettings();
+  document.getElementById('b-name').value    = SETTINGS.store_name || '';
+  document.getElementById('b-tagline').value = SETTINGS.hero_tagline || '';
+  document.getElementById('b-b1').value      = SETTINGS.badge1 || '⚡ Fast Delivery';
+  document.getElementById('b-b2').value      = SETTINGS.badge2 || '🔒 Secure Checkout';
+  document.getElementById('b-b3').value      = SETTINGS.badge3 || '📦 COD Available';
+}
+
+async function saveBanner() {
+  await saveSetting('store_name',   document.getElementById('b-name').value);
+  await saveSetting('hero_tagline', document.getElementById('b-tagline').value);
+  await saveSetting('badge1',       document.getElementById('b-b1').value);
+  await saveSetting('badge2',       document.getElementById('b-b2').value);
+  await saveSetting('badge3',       document.getElementById('b-b3').value);
+  showSuc('banner-suc', '✓ Banner saved! Reload the storefront to see changes.');
+}
+
+// ---- HELPERS ----
+function closeModal(id) { document.getElementById(id).style.display='none'; }
+function showSuc(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
+function showErr2(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',4000); }
+document.addEventListener('click', e=>{ if(e.target.classList.contains('modal-overlay')) closeModal(e.target.id); });
+
+// ---- INIT ----
+document.addEventListener('DOMContentLoaded', async () => {
+  const ok = await adminGuard();
+  if (ok) loadOverview();
+});
+</script>
+</body>
+</html>

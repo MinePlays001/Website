@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Login – PulseGear</title>
+<link rel="stylesheet" href="../css/style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="bg-grid"></div><div class="scanline"></div>
+<nav id="navbar">
+  <a class="nav-logo" href="../index.html"><span class="logo-p">PULSE</span><span class="logo-g">GEAR</span></a>
+  <div class="nav-links"><a href="../index.html">STORE</a></div>
+  <div class="nav-auth"></div>
+</nav>
+<div class="auth-page">
+  <div class="auth-box">
+    <h1 class="auth-title" id="auth-title">// LOGIN</h1>
+    <div class="err-msg" id="err"></div>
+    <div class="suc-msg" id="suc"></div>
+
+    <!-- LOGIN FORM -->
+    <form id="login-form" onsubmit="doLogin(event)">
+      <div class="fg"><label>EMAIL</label><input type="email" id="l-email" required placeholder="you@email.com"/></div>
+      <div class="fg"><label>PASSWORD</label><input type="password" id="l-pass" required placeholder="••••••••"/></div>
+      <button type="submit" class="btn btn-full" id="l-btn">⚡ LOGIN</button>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="reg-form" onsubmit="doRegister(event)" style="display:none">
+      <div class="fg"><label>FULL NAME</label><input type="text" id="r-name" required placeholder="Muhammad Ali"/></div>
+      <div class="fg"><label>EMAIL</label><input type="email" id="r-email" required placeholder="you@email.com"/></div>
+      <div class="fg"><label>PASSWORD</label><input type="password" id="r-pass" required placeholder="Min 6 chars" minlength="6"/></div>
+      <div class="fg"><label>CONFIRM PASSWORD</label><input type="password" id="r-conf" required placeholder="Repeat password"/></div>
+      <button type="submit" class="btn btn-full" id="r-btn">⚡ CREATE ACCOUNT</button>
+    </form>
+
+    <div class="auth-switch" id="auth-switch">
+      Don't have an account? <a href="#" onclick="toggleForm(event)">REGISTER</a>
+    </div>
+  </div>
+</div>
+<script src="../js/config.js"></script>
+<script>
+let isLogin = true;
+function toggleForm(e) {
+  e.preventDefault(); isLogin = !isLogin;
+  document.getElementById('login-form').style.display = isLogin ? '' : 'none';
+  document.getElementById('reg-form').style.display   = isLogin ? 'none' : '';
+  document.getElementById('auth-title').textContent   = isLogin ? '// LOGIN' : '// REGISTER';
+  document.getElementById('auth-switch').innerHTML    = isLogin
+    ? `Don't have an account? <a href="#" onclick="toggleForm(event)">REGISTER</a>`
+    : `Already registered? <a href="#" onclick="toggleForm(event)">LOGIN</a>`;
+  document.getElementById('err').style.display = 'none';
+  document.getElementById('suc').style.display = 'none';
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('l-btn');
+  btn.textContent = 'LOGGING IN...'; btn.disabled = true;
+  hide('err'); hide('suc');
+  const { error } = await sb().auth.signInWithPassword({
+    email: document.getElementById('l-email').value,
+    password: document.getElementById('l-pass').value
+  });
+  if (error) { show('err', error.message); btn.textContent='⚡ LOGIN'; btn.disabled=false; }
+  else window.location.href = '../index.html';
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  if (document.getElementById('r-pass').value !== document.getElementById('r-conf').value) { show('err','Passwords do not match'); return; }
+  const btn = document.getElementById('r-btn');
+  btn.textContent = 'CREATING...'; btn.disabled = true;
+  hide('err'); hide('suc');
+  const { error } = await sb().auth.signUp({
+    email: document.getElementById('r-email').value,
+    password: document.getElementById('r-pass').value,
+    options: { data: { full_name: document.getElementById('r-name').value } }
+  });
+  if (error) { show('err', error.message); btn.textContent='⚡ CREATE ACCOUNT'; btn.disabled=false; }
+  else { show('suc','✓ Account created! Check your email to confirm, then login.'); btn.textContent='DONE!'; setTimeout(()=>toggleForm({preventDefault:()=>{}}),2500); }
+}
+
+function show(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block'}
+function hide(id){document.getElementById(id).style.display='none'}
+</script>
+</body>
+</html>
