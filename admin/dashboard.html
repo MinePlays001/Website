@@ -97,7 +97,7 @@
         <h1 class="admin-title" style="margin:0">// CATEGORIES</h1>
         <button class="btn" onclick="openCatModal()">+ ADD CATEGORY</button>
       </div>
-      <p style="font-family:var(--F2);font-size:.72rem;color:var(--mute);margin-bottom:20px">These circular badges appear on your storefront below the hero section. Customers can click them to filter products.</p>
+      <p style="font-family:var(--F2);font-size:.72rem;color:var(--mute);margin-bottom:20px">These circular badges appear on your storefront below the hero section. Slug must match your product category field exactly.</p>
       <div id="cat-admin-grid" class="prod-admin-grid">
         <div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">LOADING...</div>
       </div>
@@ -226,18 +226,18 @@
     <div class="fg"><label>PRICE (PKR)</label><input id="prod-price" type="number" required placeholder="8500"/></div>
     <div class="fg"><label>STOCK</label><input id="prod-stock" type="number" required placeholder="10"/></div>
     <div class="fg"><label>EMOJI (shown if no image)</label><input id="prod-emoji" placeholder="🎧"/></div>
-   <div class="fg">
-  <label>PRODUCT IMAGE</label>
-  <input id="prod-img" placeholder="Paste URL or upload below"/>
-  <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
-    <input type="file" id="prod-img-file" accept="image/*" onchange="uploadImage()" style="display:none"/>
-    <button type="button" class="btn btn-sm" onclick="document.getElementById('prod-img-file').click()">⬆ UPLOAD IMAGE</button>
-    <span id="upload-status" style="font-family:var(--F2);font-size:.7rem;color:var(--mute)"></span>
-  </div>
-  <div id="img-preview" style="margin-top:10px;display:none">
-    <img id="img-preview-el" style="width:100%;height:120px;object-fit:cover;border:1px solid #1a1a2e"/>
-  </div>
-</div>
+    <div class="fg">
+      <label>PRODUCT IMAGE</label>
+      <input id="prod-img" placeholder="Paste URL or upload below"/>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+        <input type="file" id="prod-img-file" accept="image/*" onchange="uploadImage()" style="display:none"/>
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('prod-img-file').click()">⬆ UPLOAD IMAGE</button>
+        <span id="upload-status" style="font-family:var(--F2);font-size:.7rem;color:var(--mute)"></span>
+      </div>
+      <div id="img-preview" style="margin-top:10px;display:none">
+        <img id="img-preview-el" style="width:100%;height:120px;object-fit:cover;border:1px solid #1a1a2e"/>
+      </div>
+    </div>
     <div class="fg"><label>DESCRIPTION</label><textarea id="prod-desc" placeholder="Short product description"></textarea></div>
     <div class="fg">
       <label>STATUS</label>
@@ -255,7 +255,7 @@
     <h2 class="modal-title" id="cat-modal-title">// ADD CATEGORY</h2>
     <input type="hidden" id="cat-id"/>
     <div class="fg"><label>CATEGORY NAME (display label)</label><input id="cat-name" placeholder="Smart Watches"/></div>
-    <div class="fg"><label>SLUG (matches product category field — lowercase, no spaces)</label><input id="cat-slug" placeholder="watches"/></div>
+    <div class="fg"><label>SLUG (must match product category field — lowercase)</label><input id="cat-slug" placeholder="watches"/></div>
     <div class="fg"><label>EMOJI (shown if no image)</label><input id="cat-emoji" placeholder="⌚"/></div>
     <div class="fg">
       <label>CATEGORY IMAGE (optional)</label>
@@ -302,15 +302,15 @@ function show(tab) {
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
   event.target.classList.add('active');
   currentTab = tab;
-  if (tab === 'overview')    loadOverview();
-  if (tab === 'orders')      loadOrders();
-  if (tab === 'products')    loadAdminProducts();
-  if (tab === 'categories')  loadAdminCategories();
-  if (tab === 'sales')       loadSales('weekly', document.querySelector('#tab-sales .tab-btn'));
-  if (tab === 'settings')    loadSettingsForm();
-  if (tab === 'payments')    loadPaymentsForm();
-  if (tab === 'admins')      loadAdmins();
-  if (tab === 'banner')      loadBannerForm();
+  if (tab === 'overview')   loadOverview();
+  if (tab === 'orders')     loadOrders();
+  if (tab === 'products')   loadAdminProducts();
+  if (tab === 'categories') loadAdminCategories();
+  if (tab === 'sales')      loadSales('weekly', document.querySelector('#tab-sales .tab-btn'));
+  if (tab === 'settings')   loadSettingsForm();
+  if (tab === 'payments')   loadPaymentsForm();
+  if (tab === 'admins')     loadAdmins();
+  if (tab === 'banner')     loadBannerForm();
 }
 
 // ---- OVERVIEW ----
@@ -368,12 +368,13 @@ function renderOrders(orders) {
         <td>${o.payment_method}</td>
         <td style="font-size:.7rem;color:var(--mute)">${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
         <td><span class="badge-status s-${o.status}" id="badge-${o.id}">${o.status.toUpperCase()}</span></td>
-        <td><button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button></td>
-        <button class="btn btn-p btn-sm" onclick="deleteOrder('${o.id}','${o.order_id}')">DELETE</button>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button>
+          <button class="btn btn-p btn-sm" onclick="deleteOrder('${o.id}','${o.order_id}')">DELETE</button>
+        </td>
       </tr>`).join('');
 }
-<td>
-  <button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button>
+
 function openOrderModal(id) {
   const o = allOrders.find(x=>x.id===id);
   if (!o) return;
@@ -418,13 +419,6 @@ async function updateStatus(id, status) {
   }
 }
 
-function exportOrdersCSV() {
-  const h = ['Order ID','Customer','Phone','Address','Product','Price','Payment','Status','Date'];
-  const rows = allOrders.map(o => [o.order_id,o.customer_name,o.phone,`"${o.address}"`,o.product_name,o.product_price,o.payment_method,o.status,new Date(o.created_at).toLocaleDateString()]);
-  const csv = [h, ...rows].map(r=>r.join(',')).join('\n');
-  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
-  a.download = 'pulsegear-orders-'+Date.now()+'.csv'; a.click();
-}
 async function deleteOrder(id, orderId) {
   if (!confirm(`Permanently delete order ${orderId}? This cannot be undone.`)) return;
   const { error } = await sb().from('orders').delete().eq('id', id);
@@ -432,12 +426,22 @@ async function deleteOrder(id, orderId) {
   allOrders = allOrders.filter(o => o.id !== id);
   renderOrders(allOrders);
 }
+
+function exportOrdersCSV() {
+  const h = ['Order ID','Customer','Phone','Address','Product','Price','Payment','Status','Date'];
+  const rows = allOrders.map(o => [o.order_id,o.customer_name,o.phone,`"${o.address}"`,o.product_name,o.product_price,o.payment_method,o.status,new Date(o.created_at).toLocaleDateString()]);
+  const csv = [h, ...rows].map(r=>r.join(',')).join('\n');
+  const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download = 'pulsegear-orders-'+Date.now()+'.csv'; a.click();
+}
+
 // ---- PRODUCTS ----
 async function loadAdminProducts() {
   const { data } = await sb().from('products').select('*').order('created_at',{ascending:false});
   const grid = document.getElementById('prod-admin-grid');
   if (!data?.length) { grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">// NO PRODUCTS. ADD ONE ↗</div>`; return; }
-  grid.innerHTML = data.map(p=>`
+  window._prodData = data;
+  grid.innerHTML = data.map((p,i)=>`
     <div class="prod-admin-card">
       ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" style="width:100%;height:120px;object-fit:cover;margin-bottom:10px"/>`
         : `<div class="prod-emoji">${p.emoji||'📦'}</div>`}
@@ -446,7 +450,7 @@ async function loadAdminProducts() {
       <div class="prod-admin-price">Rs. ${p.price?.toLocaleString()}</div>
       <div style="font-family:var(--F2);font-size:.62rem;margin-bottom:10px;color:${p.active?'var(--g)':'var(--p)'}">${p.active?'● ACTIVE':'○ HIDDEN'}</div>
       <div class="prod-admin-actions">
-        <button class="btn btn-sm" onclick="openProductModal(${JSON.stringify(p).replace(/"/g,"'")})">EDIT</button>
+        <button class="btn btn-sm" onclick="openProductModal(window._prodData[${i}])">EDIT</button>
         <button class="btn btn-p btn-sm" onclick="deleteProduct('${p.id}','${p.name}')">DELETE</button>
       </div>
     </div>`).join('');
@@ -464,6 +468,8 @@ function openProductModal(p) {
   document.getElementById('prod-desc').value  = p?.description || '';
   document.getElementById('prod-active').value = String(p?.active ?? true);
   document.getElementById('prod-err').style.display = 'none';
+  document.getElementById('img-preview').style.display = p?.image_url ? 'block' : 'none';
+  if (p?.image_url) document.getElementById('img-preview-el').src = p.image_url;
   document.getElementById('product-modal').style.display = 'flex';
 }
 
@@ -526,7 +532,6 @@ async function loadSettingsForm() {
   document.getElementById('cfg-name').value    = SETTINGS.store_name || '';
   document.getElementById('cfg-tagline').value = SETTINGS.hero_tagline || '';
   document.getElementById('cfg-wa').value      = SETTINGS.whatsapp || '';
-  // categories
   const { data } = await sb().from('products').select('category');
   const cats = [...new Set((data||[]).map(p=>p.category))];
   document.getElementById('cats-list').textContent = cats.length ? cats.join(', ') : 'No products yet';
@@ -601,34 +606,24 @@ async function saveBanner() {
   await saveSetting('badge3',       document.getElementById('b-b3').value);
   showSuc('banner-suc', '✓ Banner saved! Reload the storefront to see changes.');
 }
+
 // ---- IMAGE UPLOAD ----
 async function uploadImage() {
   const file = document.getElementById('prod-img-file').files[0];
   if (!file) return;
   const status = document.getElementById('upload-status');
-  status.textContent = 'UPLOADING...';
-  status.style.color = 'var(--y)';
-
+  status.textContent = 'UPLOADING...'; status.style.color = 'var(--y)';
   const ext = file.name.split('.').pop();
   const fileName = `product-${Date.now()}.${ext}`;
-
-  const { data, error } = await sb().storage.from('products').upload(fileName, file, {
-    cacheControl: '3600', upsert: false
-  });
-
-  if (error) {
-    status.textContent = 'FAILED: ' + error.message;
-    status.style.color = 'var(--p)';
-    return;
-  }
-
+  const { data, error } = await sb().storage.from('products').upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) { status.textContent = 'FAILED: ' + error.message; status.style.color = 'var(--p)'; return; }
   const { data: urlData } = sb().storage.from('products').getPublicUrl(fileName);
   document.getElementById('prod-img').value = urlData.publicUrl;
-  status.textContent = '✓ UPLOADED';
-  status.style.color = 'var(--g)';
+  status.textContent = '✓ UPLOADED'; status.style.color = 'var(--g)';
   document.getElementById('img-preview-el').src = urlData.publicUrl;
   document.getElementById('img-preview').style.display = 'block';
 }
+
 // ---- CATEGORIES ----
 async function loadAdminCategories() {
   const { data } = await sb().from('categories').select('*').order('sort_order', { ascending: true });
@@ -637,18 +632,17 @@ async function loadAdminCategories() {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">// NO CATEGORIES YET. ADD ONE ↗</div>`;
     return;
   }
-  grid.innerHTML = data.map(c => `
+  window._catData = data;
+  grid.innerHTML = data.map((c, i) => `
     <div class="prod-admin-card" style="text-align:center">
-      <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 12px;border:2px solid ${c.active ? 'var(--c)' : '#333'};overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(0,245,255,.05)">
-        ${c.image_url
-          ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover"/>`
-          : `<span style="font-size:2rem">${c.emoji || '📦'}</span>`}
+      <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 12px;border:2px solid ${c.active?'var(--c)':'#333'};overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(0,245,255,.05)">
+        ${c.image_url ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover"/>` : `<span style="font-size:2rem">${c.emoji||'📦'}</span>`}
       </div>
       <div class="prod-admin-name">${c.name}</div>
-      <div style="font-family:var(--F2);font-size:.65rem;color:var(--mute);margin-bottom:4px">slug: ${c.slug} · order: ${c.sort_order ?? 0}</div>
-      <div style="font-family:var(--F2);font-size:.62rem;margin-bottom:10px;color:${c.active ? 'var(--g)' : 'var(--p)'}">${c.active ? '● ACTIVE' : '○ HIDDEN'}</div>
+      <div style="font-family:var(--F2);font-size:.65rem;color:var(--mute);margin-bottom:4px">slug: ${c.slug} · order: ${c.sort_order??0}</div>
+      <div style="font-family:var(--F2);font-size:.62rem;margin-bottom:10px;color:${c.active?'var(--g)':'var(--p)'}">${c.active?'● ACTIVE':'○ HIDDEN'}</div>
       <div class="prod-admin-actions" style="justify-content:center">
-        <button class="btn btn-sm" onclick='openCatModal(${JSON.stringify(c).replace(/'/g,"\\'")} )'>EDIT</button>
+        <button class="btn btn-sm" onclick="openCatModal(window._catData[${i}])">EDIT</button>
         <button class="btn btn-p btn-sm" onclick="deleteCat('${c.id}','${c.name}')">DELETE</button>
       </div>
     </div>`).join('');
@@ -664,43 +658,36 @@ function openCatModal(c) {
   document.getElementById('cat-order').value  = c?.sort_order ?? '';
   document.getElementById('cat-active').value = String(c?.active ?? true);
   document.getElementById('cat-err').style.display = 'none';
-  document.getElementById('cat-img-preview').style.display = 'none';
-  if (c?.image_url) {
-    document.getElementById('cat-img-preview-el').src = c.image_url;
-    document.getElementById('cat-img-preview').style.display = 'block';
-  }
+  document.getElementById('cat-img-preview').style.display = c?.image_url ? 'block' : 'none';
+  if (c?.image_url) document.getElementById('cat-img-preview-el').src = c.image_url;
   document.getElementById('cat-modal').style.display = 'flex';
 }
 
 async function saveCat() {
   const id = document.getElementById('cat-id').value;
   const nameVal = document.getElementById('cat-name').value.trim();
-  const slugVal = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  const slugVal = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/\s+/g,'-');
   if (!nameVal || !slugVal) {
     const e = document.getElementById('cat-err');
     e.textContent = 'Name and slug are required.'; e.style.display = 'block'; return;
   }
   const data = {
-    name: nameVal,
-    slug: slugVal,
+    name: nameVal, slug: slugVal,
     emoji: document.getElementById('cat-emoji').value.trim() || '📦',
     image_url: document.getElementById('cat-img').value.trim() || null,
     sort_order: parseInt(document.getElementById('cat-order').value) || 0,
     active: document.getElementById('cat-active').value === 'true'
   };
   let error;
-  if (id) { ({ error } = await sb().from('categories').update(data).eq('id', id)); }
-  else    { ({ error } = await sb().from('categories').insert([data])); }
-  if (error) {
-    const e = document.getElementById('cat-err');
-    e.textContent = error.message; e.style.display = 'block'; return;
-  }
+  if (id) { ({error} = await sb().from('categories').update(data).eq('id', id)); }
+  else    { ({error} = await sb().from('categories').insert([data])); }
+  if (error) { const e=document.getElementById('cat-err'); e.textContent=error.message; e.style.display='block'; return; }
   closeModal('cat-modal');
   loadAdminCategories();
 }
 
 async function deleteCat(id, name) {
-  if (!confirm(`Delete category "${name}"? This won't delete products in this category.`)) return;
+  if (!confirm(`Delete category "${name}"?`)) return;
   await sb().from('categories').delete().eq('id', id);
   loadAdminCategories();
 }
@@ -711,10 +698,9 @@ async function uploadCatImage() {
   const status = document.getElementById('cat-upload-status');
   status.textContent = 'UPLOADING...'; status.style.color = 'var(--y)';
   const ext = file.name.split('.').pop();
-  const fileName = `category-${Date.now()}.${ext}`;
-  const { data, error } = await sb().storage.from('products').upload(fileName, file, { cacheControl: '3600', upsert: false });
-  if (error) { status.textContent = 'FAILED: ' + error.message; status.style.color = 'var(--p)'; return; }
-  const { data: urlData } = sb().storage.from('products').getPublicUrl(fileName);
+  const { data, error } = await sb().storage.from('products').upload(`category-${Date.now()}.${ext}`, file, { cacheControl:'3600', upsert:false });
+  if (error) { status.textContent = 'FAILED: '+error.message; status.style.color='var(--p)'; return; }
+  const { data: urlData } = sb().storage.from('products').getPublicUrl(data.path);
   document.getElementById('cat-img').value = urlData.publicUrl;
   document.getElementById('cat-img-preview-el').src = urlData.publicUrl;
   document.getElementById('cat-img-preview').style.display = 'block';
@@ -730,7 +716,6 @@ function toggleSidebar() {
   const s = document.querySelector('.admin-sidebar');
   s.style.display = (s.style.display === 'block') ? 'none' : 'block';
 }
-// Close sidebar when tab selected on mobile
 document.querySelectorAll('.sidebar-link').forEach(l => {
   l.addEventListener('click', () => {
     if (window.innerWidth <= 768)
