@@ -157,9 +157,28 @@ function filterCat(cat, btn) {
 function openCheckout(p) {
   if (!currentUser) { document.getElementById('login-guard').style.display = 'flex'; return; }
   selProduct = p;
-  document.getElementById('checkout-summary').innerHTML =
-    `<div style="display:flex;justify-content:space-between"><span>${p.emoji||'📦'} ${p.name}</span><strong style="color:var(--y)">Rs. ${p.price.toLocaleString()}</strong></div>`;
-
+ const deliveryFee = p.price < 2000 ? 150 : 0;
+const total = p.price + deliveryFee;
+document.getElementById('checkout-summary').innerHTML = `
+  <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <span>${p.emoji||'📦'} ${p.name}</span>
+    <strong style="color:var(--y)">Rs. ${p.price.toLocaleString()}</strong>
+  </div>
+  ${deliveryFee > 0 ? `
+  <div style="background:rgba(255,230,0,.08);border:1px solid rgba(255,230,0,.25);padding:10px;margin-top:8px;font-family:var(--F2);font-size:.75rem">
+    ⚠ Delivery charges apply for orders under Rs. 2,000<br>
+    <div style="display:flex;justify-content:space-between;margin-top:6px">
+      <span style="color:var(--mute)">Delivery Fee:</span>
+      <span style="color:var(--y)">Rs. ${deliveryFee}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:4px;border-top:1px solid rgba(255,230,0,.2);padding-top:6px">
+      <span style="color:var(--mute)">Total:</span>
+      <strong style="color:var(--g)">Rs. ${total.toLocaleString()}</strong>
+    </div>
+  </div>` : `
+  <div style="background:rgba(57,255,20,.07);border:1px solid rgba(57,255,20,.2);padding:8px;margin-top:8px;font-family:var(--F2);font-size:.73rem;color:var(--g)">
+    ✓ Free delivery on this order!
+  </div>`}`;
   // Build payment options from settings
   const opts = [];
   if (SETTINGS.jazzcash) opts.push({val:'JazzCash', label:'💸 JazzCash'});
