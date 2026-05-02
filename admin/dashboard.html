@@ -29,6 +29,7 @@
     <div class="sidebar-section">STORE</div>
     <a class="sidebar-link" onclick="show('orders')">📦 Orders</a>
     <a class="sidebar-link" onclick="show('products')">🛍 Products</a>
+    <a class="sidebar-link" onclick="show('categories')">🏷 Categories</a>
     <a class="sidebar-link" onclick="show('sales')">💰 Sales</a>
     <div class="sidebar-section">ADMIN</div>
     <a class="sidebar-link" onclick="show('settings')">⚙ Store Settings</a>
@@ -86,6 +87,18 @@
         <button class="btn" onclick="openProductModal()">+ ADD PRODUCT</button>
       </div>
       <div class="prod-admin-grid" id="prod-admin-grid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">LOADING...</div>
+      </div>
+    </div>
+
+    <!-- ===== CATEGORIES ===== -->
+    <div id="tab-categories" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <h1 class="admin-title" style="margin:0">// CATEGORIES</h1>
+        <button class="btn" onclick="openCatModal()">+ ADD CATEGORY</button>
+      </div>
+      <p style="font-family:var(--F2);font-size:.72rem;color:var(--mute);margin-bottom:20px">These circular badges appear on your storefront below the hero section. Customers can click them to filter products.</p>
+      <div id="cat-admin-grid" class="prod-admin-grid">
         <div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">LOADING...</div>
       </div>
     </div>
@@ -235,6 +248,37 @@
   </div>
 </div>
 
+<!-- CATEGORY MODAL -->
+<div id="cat-modal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('cat-modal')">✕</button>
+    <h2 class="modal-title" id="cat-modal-title">// ADD CATEGORY</h2>
+    <input type="hidden" id="cat-id"/>
+    <div class="fg"><label>CATEGORY NAME (display label)</label><input id="cat-name" placeholder="Smart Watches"/></div>
+    <div class="fg"><label>SLUG (matches product category field — lowercase, no spaces)</label><input id="cat-slug" placeholder="watches"/></div>
+    <div class="fg"><label>EMOJI (shown if no image)</label><input id="cat-emoji" placeholder="⌚"/></div>
+    <div class="fg">
+      <label>CATEGORY IMAGE (optional)</label>
+      <input id="cat-img" placeholder="Paste image URL or upload"/>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+        <input type="file" id="cat-img-file" accept="image/*" onchange="uploadCatImage()" style="display:none"/>
+        <button type="button" class="btn btn-sm" onclick="document.getElementById('cat-img-file').click()">⬆ UPLOAD IMAGE</button>
+        <span id="cat-upload-status" style="font-family:var(--F2);font-size:.7rem;color:var(--mute)"></span>
+      </div>
+      <div id="cat-img-preview" style="margin-top:10px;display:none">
+        <img id="cat-img-preview-el" style="width:80px;height:80px;object-fit:cover;border-radius:50%;border:2px solid var(--c)"/>
+      </div>
+    </div>
+    <div class="fg"><label>SORT ORDER (lower = appears first)</label><input id="cat-order" type="number" placeholder="1"/></div>
+    <div class="fg">
+      <label>STATUS</label>
+      <select id="cat-active"><option value="true">Active (visible on store)</option><option value="false">Hidden</option></select>
+    </div>
+    <div class="err-msg" id="cat-err"></div>
+    <button class="btn btn-full" onclick="saveCat()">SAVE CATEGORY</button>
+  </div>
+</div>
+
 <script src="../js/config.js"></script>
 <script>
 let allOrders = [], currentTab = 'overview';
@@ -258,14 +302,15 @@ function show(tab) {
   document.querySelectorAll('.sidebar-link').forEach(l => l.classList.remove('active'));
   event.target.classList.add('active');
   currentTab = tab;
-  if (tab === 'overview')  loadOverview();
-  if (tab === 'orders')    loadOrders();
-  if (tab === 'products')  loadAdminProducts();
-  if (tab === 'sales')     loadSales('weekly', document.querySelector('#tab-sales .tab-btn'));
-  if (tab === 'settings')  loadSettingsForm();
-  if (tab === 'payments')  loadPaymentsForm();
-  if (tab === 'admins')    loadAdmins();
-  if (tab === 'banner')    loadBannerForm();
+  if (tab === 'overview')    loadOverview();
+  if (tab === 'orders')      loadOrders();
+  if (tab === 'products')    loadAdminProducts();
+  if (tab === 'categories')  loadAdminCategories();
+  if (tab === 'sales')       loadSales('weekly', document.querySelector('#tab-sales .tab-btn'));
+  if (tab === 'settings')    loadSettingsForm();
+  if (tab === 'payments')    loadPaymentsForm();
+  if (tab === 'admins')      loadAdmins();
+  if (tab === 'banner')      loadBannerForm();
 }
 
 // ---- OVERVIEW ----
@@ -576,6 +621,98 @@ async function uploadImage() {
   document.getElementById('img-preview-el').src = urlData.publicUrl;
   document.getElementById('img-preview').style.display = 'block';
 }
+// ---- CATEGORIES ----
+async function loadAdminCategories() {
+  const { data } = await sb().from('categories').select('*').order('sort_order', { ascending: true });
+  const grid = document.getElementById('cat-admin-grid');
+  if (!data?.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--mute);padding:40px;font-family:var(--F2)">// NO CATEGORIES YET. ADD ONE ↗</div>`;
+    return;
+  }
+  grid.innerHTML = data.map(c => `
+    <div class="prod-admin-card" style="text-align:center">
+      <div style="width:80px;height:80px;border-radius:50%;margin:0 auto 12px;border:2px solid ${c.active ? 'var(--c)' : '#333'};overflow:hidden;display:flex;align-items:center;justify-content:center;background:rgba(0,245,255,.05)">
+        ${c.image_url
+          ? `<img src="${c.image_url}" style="width:100%;height:100%;object-fit:cover"/>`
+          : `<span style="font-size:2rem">${c.emoji || '📦'}</span>`}
+      </div>
+      <div class="prod-admin-name">${c.name}</div>
+      <div style="font-family:var(--F2);font-size:.65rem;color:var(--mute);margin-bottom:4px">slug: ${c.slug} · order: ${c.sort_order ?? 0}</div>
+      <div style="font-family:var(--F2);font-size:.62rem;margin-bottom:10px;color:${c.active ? 'var(--g)' : 'var(--p)'}">${c.active ? '● ACTIVE' : '○ HIDDEN'}</div>
+      <div class="prod-admin-actions" style="justify-content:center">
+        <button class="btn btn-sm" onclick='openCatModal(${JSON.stringify(c).replace(/'/g,"\\'")} )'>EDIT</button>
+        <button class="btn btn-p btn-sm" onclick="deleteCat('${c.id}','${c.name}')">DELETE</button>
+      </div>
+    </div>`).join('');
+}
+
+function openCatModal(c) {
+  document.getElementById('cat-modal-title').textContent = c ? '// EDIT CATEGORY' : '// ADD CATEGORY';
+  document.getElementById('cat-id').value     = c?.id || '';
+  document.getElementById('cat-name').value   = c?.name || '';
+  document.getElementById('cat-slug').value   = c?.slug || '';
+  document.getElementById('cat-emoji').value  = c?.emoji || '';
+  document.getElementById('cat-img').value    = c?.image_url || '';
+  document.getElementById('cat-order').value  = c?.sort_order ?? '';
+  document.getElementById('cat-active').value = String(c?.active ?? true);
+  document.getElementById('cat-err').style.display = 'none';
+  document.getElementById('cat-img-preview').style.display = 'none';
+  if (c?.image_url) {
+    document.getElementById('cat-img-preview-el').src = c.image_url;
+    document.getElementById('cat-img-preview').style.display = 'block';
+  }
+  document.getElementById('cat-modal').style.display = 'flex';
+}
+
+async function saveCat() {
+  const id = document.getElementById('cat-id').value;
+  const nameVal = document.getElementById('cat-name').value.trim();
+  const slugVal = document.getElementById('cat-slug').value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!nameVal || !slugVal) {
+    const e = document.getElementById('cat-err');
+    e.textContent = 'Name and slug are required.'; e.style.display = 'block'; return;
+  }
+  const data = {
+    name: nameVal,
+    slug: slugVal,
+    emoji: document.getElementById('cat-emoji').value.trim() || '📦',
+    image_url: document.getElementById('cat-img').value.trim() || null,
+    sort_order: parseInt(document.getElementById('cat-order').value) || 0,
+    active: document.getElementById('cat-active').value === 'true'
+  };
+  let error;
+  if (id) { ({ error } = await sb().from('categories').update(data).eq('id', id)); }
+  else    { ({ error } = await sb().from('categories').insert([data])); }
+  if (error) {
+    const e = document.getElementById('cat-err');
+    e.textContent = error.message; e.style.display = 'block'; return;
+  }
+  closeModal('cat-modal');
+  loadAdminCategories();
+}
+
+async function deleteCat(id, name) {
+  if (!confirm(`Delete category "${name}"? This won't delete products in this category.`)) return;
+  await sb().from('categories').delete().eq('id', id);
+  loadAdminCategories();
+}
+
+async function uploadCatImage() {
+  const file = document.getElementById('cat-img-file').files[0];
+  if (!file) return;
+  const status = document.getElementById('cat-upload-status');
+  status.textContent = 'UPLOADING...'; status.style.color = 'var(--y)';
+  const ext = file.name.split('.').pop();
+  const fileName = `category-${Date.now()}.${ext}`;
+  const { data, error } = await sb().storage.from('products').upload(fileName, file, { cacheControl: '3600', upsert: false });
+  if (error) { status.textContent = 'FAILED: ' + error.message; status.style.color = 'var(--p)'; return; }
+  const { data: urlData } = sb().storage.from('products').getPublicUrl(fileName);
+  document.getElementById('cat-img').value = urlData.publicUrl;
+  document.getElementById('cat-img-preview-el').src = urlData.publicUrl;
+  document.getElementById('cat-img-preview').style.display = 'block';
+  status.textContent = '✓ UPLOADED'; status.style.color = 'var(--g)';
+}
+
 // ---- HELPERS ----
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 function showSuc(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
