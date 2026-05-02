@@ -34,6 +34,11 @@
   <div id="particles" style="position:absolute;inset:0;pointer-events:none;z-index:1"></div>
 </section>
 
+<!-- CATEGORY BADGES -->
+<section class="cat-badges-section" id="cat-badges-section">
+  <div id="cat-badges-row"></div>
+</section>
+
 <section class="products-section" id="products-section">
   <div id="filter-bar"></div>
   <div id="products-grid"></div>
@@ -98,6 +103,7 @@ async function init() {
   document.getElementById('footer-name').textContent = `© ${new Date().getFullYear()} ${SETTINGS.store_name} Pakistan · All rights reserved`;
   document.querySelector('nav .nav-logo').innerHTML = `<span class="logo-p">${SETTINGS.store_name.slice(0,5).toUpperCase()}</span><span class="logo-g">${SETTINGS.store_name.slice(5).toUpperCase()}</span>`;
 
+  await loadCategoryBadges();
   await loadProducts();
   spawnParticles();
 }
@@ -246,6 +252,42 @@ document.addEventListener('DOMContentLoaded', init);
 
 function scrollToProducts() {
   document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function loadCategoryBadges() {
+  const { data: cats } = await sb().from('categories').select('*').eq('active', true).order('sort_order', { ascending: true });
+  const row = document.getElementById('cat-badges-row');
+  if (!cats || !cats.length) { row.innerHTML = ''; return; }
+  row.innerHTML = cats.map(c => `
+    <div class="cat-badge" onclick="filterByCat('${c.slug}', this)" data-slug="${c.slug}">
+      <div class="cat-badge-circle">
+        ${c.image_url
+          ? `<img src="${c.image_url}" alt="${c.name}" class="cat-badge-img"/>`
+          : `<span class="cat-badge-emoji">${c.emoji || '📦'}</span>`}
+        <div class="cat-badge-ring"></div>
+      </div>
+      <span class="cat-badge-label">${c.name}</span>
+    </div>`).join('');
+}
+
+function filterByCat(slug, el) {
+  // Highlight active badge
+  document.querySelectorAll('.cat-badge').forEach(b => b.classList.remove('active'));
+  if (el) el.classList.add('active');
+  // Scroll to products
+  document.getElementById('products-section').scrollIntoView({ behavior: 'smooth' });
+  // Filter
+  if (slug === 'all') {
+    document.querySelectorAll('.product-card').forEach(c => c.style.display = '');
+    document.querySelectorAll('.filter-btn').forEach(b => { b.classList.toggle('active', b.textContent.toLowerCase() === 'all'); });
+  } else {
+    document.querySelectorAll('.product-card').forEach(c => {
+      c.style.display = (c.dataset.cat === slug) ? '' : 'none';
+    });
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.toLowerCase() === slug);
+    });
+  }
 }
 </script>
 </body>
