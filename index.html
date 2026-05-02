@@ -24,25 +24,42 @@
 
 <section class="hero">
   <div class="hero-content">
-    <h1 class="glitch" id="store-heading" data-text="PULSEGEAR">PULSEGEAR</h1>
+    <div class="glitch-wrap">
+      <h1 class="glitch" id="store-heading" data-text="PULSEGEAR">PULSEGEAR</h1>
+    </div>
     <p class="hero-sub" id="hero-tagline">Next-gen tech. Delivered to your door.</p>
     <div class="hero-badges">
       <span>⚡ Fast Delivery</span><span>🔒 Secure Checkout</span><span>📦 COD Available</span>
     </div>
+
+    <!-- NEW: STATS BAR -->
+    <div class="hero-stats">
+      <div class="hero-stat"><span class="hero-stat-val">100%</span><span class="hero-stat-label">AUTHENTIC</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">24HR</span><span class="hero-stat-label">DISPATCH</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">PKR</span><span class="hero-stat-label">LOCAL PRICES</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-val">COD</span><span class="hero-stat-label">AVAILABLE</span></div>
+    </div>
+
+    <!-- NEW: MARQUEE TICKER -->
+    <div class="hero-ticker">
+      <div class="ticker-inner">
+        <span>⚡ FREE DELIVERY ON ORDERS ABOVE RS. 2000</span>
+        <span>🔥 NEW ARRIVALS</span>
+        <span>📦 CASH ON DELIVERY AVAILABLE</span>
+        <span>🔒 SECURE CHECKOUT</span>
+        <span>⚡ FREE DELIVERY ON ORDERS ABOVE RS. 2000</span>
+        <span>🔥 NEW ARRIVALS</span>
+        <span>📦 CASH ON DELIVERY AVAILABLE</span>
+        <span>🔒 SECURE CHECKOUT</span>
+      </div>
+    </div>
+
+    <a href="#products" class="hero-cta">SHOP NOW ↓</a>
   </div>
   <div id="particles" style="position:absolute;inset:0;pointer-events:none;z-index:1"></div>
-</section>
-
-<section class="products-section">
-  <div class="section-header">
-    <h2 class="section-title">// FEATURED PRODUCTS</h2>
-    <div class="filter-bar" id="filter-bar">
-      <button class="filter-btn active" onclick="filterCat('all',this)">ALL</button>
-    </div>
-  </div>
-  <div class="products-grid" id="products-grid">
-    <div style="grid-column:1/-1;text-align:center;padding:60px;font-family:var(--F2);color:var(--mute)">LOADING...</div>
-  </div>
 </section>
 
 <!-- CHECKOUT MODAL -->
