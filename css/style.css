@@ -56,7 +56,42 @@ nav#navbar{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;align-i
 .hero-sub{font-family:var(--F2);font-size:1rem;color:var(--mute);margin:14px 0 24px;letter-spacing:.07em}
 .hero-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
 .hero-badges span{font-family:var(--F2);font-size:.7rem;color:var(--c);border:1px solid rgba(0,245,255,.3);padding:5px 14px}
-
+.btn-browse{
+  font-family:var(--F1);
+  font-size:.95rem;
+  letter-spacing:.15em;
+  color:var(--bg);
+  background:linear-gradient(135deg,var(--c),var(--p));
+  border:none;
+  padding:16px 48px;
+  margin-top:32px;
+  cursor:pointer;
+  clip-path:polygon(12px 0%,100% 0%,calc(100% - 12px) 100%,0% 100%);
+  transition:all .3s;
+  box-shadow:0 0 30px rgba(0,245,255,.4);
+  animation:pulseGlow 2s infinite;
+  position:relative;
+  overflow:hidden;
+}
+.btn-browse::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(135deg,var(--p),var(--y));
+  opacity:0;
+  transition:opacity .3s;
+}
+.btn-browse:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 40px rgba(255,0,110,.6);
+}
+.btn-browse:hover::before{
+  opacity:1;
+}
+.btn-browse span{
+  position:relative;
+  z-index:1;
+}
 /* PRODUCTS */
 .products-section{position:relative;z-index:2;padding:70px 36px;max-width:1400px;margin:0 auto}
 #filter-bar{display:flex;gap:8px;justify-content:flex-end;margin-bottom:28px;flex-wrap:wrap}
