@@ -581,7 +581,17 @@ function closeModal(id) { document.getElementById(id).style.display='none'; }
 function showSuc(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
 function showErr2(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',4000); }
 document.addEventListener('click', e=>{ if(e.target.classList.contains('modal-overlay')) closeModal(e.target.id); });
-
+function toggleSidebar() {
+  const s = document.querySelector('.admin-sidebar');
+  s.style.display = (s.style.display === 'block') ? 'none' : 'block';
+}
+// Close sidebar when tab selected on mobile
+document.querySelectorAll('.sidebar-link').forEach(l => {
+  l.addEventListener('click', () => {
+    if (window.innerWidth <= 768)
+      document.querySelector('.admin-sidebar').style.display = 'none';
+  });
+});
 // ---- INIT ----
 document.addEventListener('DOMContentLoaded', async () => {
   const ok = await adminGuard();
