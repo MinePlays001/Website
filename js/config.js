@@ -1,6 +1,6 @@
 // == PULSEGEAR CONFIG — fill these in ==
-const SUPABASE_URL     = 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+const SUPABASE_URL     = 'https://fnslbjlmnxouvyutcbgt.supabase.co/rest/v1/';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuc2xiamxtbnhvdXZ5dXRjYmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2OTUxNDYsImV4cCI6MjA5MzI3MTE0Nn0.HlNDeuw__NT6q_sClEjya771oTCAe22inkOXf2f_dIQ';
 
 let _sb = null;
 function sb() {
@@ -11,10 +11,10 @@ function sb() {
 // Cached store settings (loaded from DB)
 let SETTINGS = {
   store_name: 'PulseGear',
-  whatsapp: '03001234567',
-  jazzcash: '03001234567',
+  whatsapp: '03266570023',
+  jazzcash: '03266570023',
   jazzcash_name: 'Store Owner',
-  easypaisa: '03001234567',
+  easypaisa: '03266570023',
   easypaisa_name: 'Store Owner',
   cod_enabled: true,
   hero_tagline: 'Next-gen tech. Delivered to your door.',
