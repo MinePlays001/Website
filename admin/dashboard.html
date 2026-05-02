@@ -547,7 +547,34 @@ async function saveBanner() {
   await saveSetting('badge3',       document.getElementById('b-b3').value);
   showSuc('banner-suc', '✓ Banner saved! Reload the storefront to see changes.');
 }
+// ---- IMAGE UPLOAD ----
+async function uploadImage() {
+  const file = document.getElementById('prod-img-file').files[0];
+  if (!file) return;
+  const status = document.getElementById('upload-status');
+  status.textContent = 'UPLOADING...';
+  status.style.color = 'var(--y)';
 
+  const ext = file.name.split('.').pop();
+  const fileName = `product-${Date.now()}.${ext}`;
+
+  const { data, error } = await sb().storage.from('products').upload(fileName, file, {
+    cacheControl: '3600', upsert: false
+  });
+
+  if (error) {
+    status.textContent = 'FAILED: ' + error.message;
+    status.style.color = 'var(--p)';
+    return;
+  }
+
+  const { data: urlData } = sb().storage.from('products').getPublicUrl(fileName);
+  document.getElementById('prod-img').value = urlData.publicUrl;
+  status.textContent = '✓ UPLOADED';
+  status.style.color = 'var(--g)';
+  document.getElementById('img-preview-el').src = urlData.publicUrl;
+  document.getElementById('img-preview').style.display = 'block';
+}
 // ---- HELPERS ----
 function closeModal(id) { document.getElementById(id).style.display='none'; }
 function showSuc(id,msg){ const e=document.getElementById(id); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',3000); }
