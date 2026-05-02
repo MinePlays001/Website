@@ -212,7 +212,18 @@
     <div class="fg"><label>PRICE (PKR)</label><input id="prod-price" type="number" required placeholder="8500"/></div>
     <div class="fg"><label>STOCK</label><input id="prod-stock" type="number" required placeholder="10"/></div>
     <div class="fg"><label>EMOJI (shown if no image)</label><input id="prod-emoji" placeholder="🎧"/></div>
-    <div class="fg"><label>IMAGE URL (optional)</label><input id="prod-img" placeholder="https://..."/></div>
+   <div class="fg">
+  <label>PRODUCT IMAGE</label>
+  <input id="prod-img" placeholder="Paste URL or upload below"/>
+  <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+    <input type="file" id="prod-img-file" accept="image/*" onchange="uploadImage()" style="display:none"/>
+    <button type="button" class="btn btn-sm" onclick="document.getElementById('prod-img-file').click()">⬆ UPLOAD IMAGE</button>
+    <span id="upload-status" style="font-family:var(--F2);font-size:.7rem;color:var(--mute)"></span>
+  </div>
+  <div id="img-preview" style="margin-top:10px;display:none">
+    <img id="img-preview-el" style="width:100%;height:120px;object-fit:cover;border:1px solid #1a1a2e"/>
+  </div>
+</div>
     <div class="fg"><label>DESCRIPTION</label><textarea id="prod-desc" placeholder="Short product description"></textarea></div>
     <div class="fg">
       <label>STATUS</label>
