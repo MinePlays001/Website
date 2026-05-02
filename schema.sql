@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS admin_users (
 );
 
 -- Add your admin email here:
-INSERT INTO admin_users (email) VALUES ('your-admin@email.com')
+INSERT INTO admin_users (email) VALUES ('sfarhanahmad439@gmail.com')
 ON CONFLICT (email) DO NOTHING;
 
 -- ============================================================
