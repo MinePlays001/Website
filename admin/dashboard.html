@@ -369,9 +369,11 @@ function renderOrders(orders) {
         <td style="font-size:.7rem;color:var(--mute)">${new Date(o.created_at).toLocaleDateString('en-PK')}</td>
         <td><span class="badge-status s-${o.status}" id="badge-${o.id}">${o.status.toUpperCase()}</span></td>
         <td><button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button></td>
+        <button class="btn btn-p btn-sm" onclick="deleteOrder('${o.id}','${o.order_id}')">DELETE</button>
       </tr>`).join('');
 }
-
+<td>
+  <button class="btn btn-sm" onclick="openOrderModal('${o.id}')">MANAGE</button>
 function openOrderModal(id) {
   const o = allOrders.find(x=>x.id===id);
   if (!o) return;
@@ -423,7 +425,13 @@ function exportOrdersCSV() {
   const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
   a.download = 'pulsegear-orders-'+Date.now()+'.csv'; a.click();
 }
-
+async function deleteOrder(id, orderId) {
+  if (!confirm(`Permanently delete order ${orderId}? This cannot be undone.`)) return;
+  const { error } = await sb().from('orders').delete().eq('id', id);
+  if (error) { alert(error.message); return; }
+  allOrders = allOrders.filter(o => o.id !== id);
+  renderOrders(allOrders);
+}
 // ---- PRODUCTS ----
 async function loadAdminProducts() {
   const { data } = await sb().from('products').select('*').order('created_at',{ascending:false});
