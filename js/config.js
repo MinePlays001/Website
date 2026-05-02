@@ -1,7 +1,6 @@
 // == PULSEGEAR CONFIG — fill these in ==
 const SUPABASE_URL     = 'https://fnslbjlmnxouvyutcbgt.supabase.co/rest/v1/';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZuc2xiamxtbnhvdXZ5dXRjYmd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc2OTUxNDYsImV4cCI6MjA5MzI3MTE0Nn0.HlNDeuw__NT6q_sClEjya771oTCAe22inkOXf2f_dIQ';
-
 let _sb = null;
 function sb() {
   if (!_sb) _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
